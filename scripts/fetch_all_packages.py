@@ -7,6 +7,31 @@ from config import DOWNLOAD_FOLDER, PPA_CONFIG
 HREF_REGEX = r"(?i)<a([^>]+)>(.+?)<\/a>"
 
 
+def fetch_packages(base_url: str) -> list[str]:
+    packages = []
+    res = requests.get(base_url, timeout=10)
+
+    if not res.ok:
+        res.raise_for_status()
+
+    matches = re.findall(HREF_REGEX, res.text)
+    for i in range(5, len(matches)):
+        # Packages are grouped by letters, all `epitech-` packages are grouped inside `e/`
+        letter = matches[i][1]
+
+        res = requests.get(f"{base_url}/{letter}", timeout=10)
+        if not res.ok:
+            res.raise_for_status()
+
+        match_packages = re.findall(HREF_REGEX, res.text)
+        for j in range(5, len(match_packages)):
+            # remove last /
+            package = match_packages[j][1][:-1]
+            packages.append(package)
+
+    return packages
+
+
 def fetch_archive_name(url: str) -> str | None:
     res = requests.get(url, timeout=10)
 
@@ -35,9 +60,11 @@ def download_archive(base_url: str, archive_name: str, final_path: str) -> None:
 
 def main():
     for ppa in PPA_CONFIG:
-        base_link = f"https://ppa.launchpadcontent.net/{ppa['ppa']}/ubuntu/pool/main"
+        base_link = f"https://ppa.launchpadcontent.net/{ppa}/ubuntu/pool/main"
 
-        for package in ppa["packages"]:
+        packages = fetch_packages(base_link)
+
+        for package in packages:
             package_link = f"{base_link}/{package[0]}/{package}"
 
             archive_name = fetch_archive_name(package_link)
