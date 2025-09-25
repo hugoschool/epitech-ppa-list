@@ -23,14 +23,8 @@ jobs:
       - name: Extract packages
         run: python3 scripts/extract_packages.py
 
-      - name: Commit
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-          git add ${{ env.FINAL_FILE }} || true
-          git commit -m "Update packages" || true
-          git push || true
+      - name: Clean up
+        run: rm -rf packages/archives
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
