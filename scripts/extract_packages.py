@@ -38,6 +38,7 @@ def main():
         result.append({"name": package_name, "packages": sorted(packages)})
 
     with open(FINAL_FILE, "w") as f:
+        f.write("export default ")
         f.write(json.dumps(result))
 
 
