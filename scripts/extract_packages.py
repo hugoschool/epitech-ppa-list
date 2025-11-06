@@ -1,3 +1,4 @@
+import time
 import json
 import os
 
@@ -21,6 +22,12 @@ def parse_packages_inside_archive(package_path: str) -> list[str] | None:
     return None
 
 
+def create_last_updated_file() -> None:
+    with open("last_updated_at.js", "w") as f:
+        f.write("export default ")
+        f.write(f"\"{time.ctime()}\"")
+
+
 def main():
     result = []
 
@@ -40,6 +47,8 @@ def main():
     with open(FINAL_FILE, "w") as f:
         f.write("export default ")
         f.write(json.dumps(result))
+
+    create_last_updated_file()
 
 
 if __name__ == "__main__":

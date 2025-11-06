@@ -1,4 +1,5 @@
 import packages from "./packages/packages.js";
+import last_updated_at from "./last_updated_at.js";
 const root = document.getElementById("root");
 
 console.log(packages);
@@ -19,3 +20,6 @@ packages.forEach(element => {
     div.append(packages_list);
     root.append(div);
 });
+
+const last_updated_elem = document.getElementById("last_updated_at");
+last_updated_elem.innerText = last_updated_at;
