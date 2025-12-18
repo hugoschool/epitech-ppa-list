@@ -8,6 +8,7 @@ packages.forEach(element => {
 
     const name = document.createElement("h1");
     name.innerText = element["name"];
+    name.id = element["name"];
 
     const packages_list = document.createElement("ul");
     element["packages"].forEach(dep => {
