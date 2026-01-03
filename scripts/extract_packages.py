@@ -1,8 +1,12 @@
 import time
 import json
+import re
 import os
 
 from config import DOWNLOAD_FOLDER, FINAL_FILE
+
+
+CHANGELOG_REGEX = r"\((.*)\)"
 
 
 def untar_package(archive: str, package_path: str) -> None:
@@ -22,10 +26,24 @@ def parse_packages_inside_archive(package_path: str) -> list[str] | None:
     return None
 
 
+def parse_version(package_path: str) -> str | None:
+    changelog_file_name = f"{package_path}/debian/changelog"
+
+    with open(changelog_file_name, "r") as f:
+        content = f.read()
+        matches = re.search(CHANGELOG_REGEX, content, re.MULTILINE)
+
+        if not matches:
+            return None
+
+        return matches.groups()[0]
+    return None
+
+
 def create_last_updated_file() -> None:
     with open("last_updated_at.js", "w") as f:
         f.write("export default ")
-        f.write(f"\"{time.ctime()}\"")
+        f.write(f'"{time.ctime()}"')
 
 
 def main():
@@ -42,7 +60,11 @@ def main():
             print(f"Couldn't find sub-packages for {package_name}")
             continue
 
-        result.append({"name": package_name, "packages": sorted(packages)})
+        version = parse_version(package_path)
+
+        result.append(
+            {"name": package_name, "packages": sorted(packages), "version": version}
+        )
 
     with open(FINAL_FILE, "w") as f:
         f.write("export default ")
