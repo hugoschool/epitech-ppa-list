@@ -1,9 +1,10 @@
 import time
 import json
 import re
+import requests
 import os
 
-from config import DOWNLOAD_FOLDER, FINAL_FILE
+from config import DOWNLOAD_FOLDER, FINAL_FILE, PPA_TARGET
 
 
 CHANGELOG_REGEX = r"\((.*)\)"
@@ -46,6 +47,38 @@ def create_last_updated_file() -> None:
         f.write(f'"{time.ctime()}"')
 
 
+# Most documentation from https://api.launchpad.net/devel.html#archive
+def get_package_release_codename(package_name: str, version: str) -> str | None:
+    params = {
+        "ws.op": "getPublishedSources",
+        # Let's not get packages that are already superseded
+        "status": "Published",
+        "pocket": "Release",
+        "source_name": package_name,
+        "version": version,
+        "order_by": "published_date_desc",
+    }
+
+    res = requests.get(
+        f"https://api.launchpad.net/devel/~{PPA_TARGET['author']}/+archive/ubuntu/{PPA_TARGET['archive_name']}",
+        params=params,
+        timeout=10,
+    )
+
+    if not res.ok:
+        return None
+
+    res = res.json()
+
+    if res["total_size"] < 1:
+        return None
+
+    try:
+        return res["entries"][0]["display_name"].split(" in ")[1]
+    except Exception as e:
+        print(f"An error occured: {e}")
+
+
 def main():
     result = []
 
@@ -62,8 +95,15 @@ def main():
 
         version = parse_version(package_path)
 
+        release = get_package_release_codename(package_name, version)
+
         result.append(
-            {"name": package_name, "packages": sorted(packages), "version": version}
+            {
+                "name": package_name,
+                "packages": sorted(packages),
+                "version": version,
+                "release": release,
+            }
         )
 
     with open(FINAL_FILE, "w") as f:
