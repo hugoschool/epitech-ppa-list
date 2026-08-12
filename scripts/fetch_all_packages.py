@@ -2,7 +2,7 @@ import os
 import re
 import requests
 
-from config import DOWNLOAD_FOLDER, PPA_CONFIG
+from config import DOWNLOAD_FOLDER, PPA_TARGET
 
 HREF_REGEX = r"(?i)<a([^>]+)>(.+?)<\/a>"
 
@@ -59,27 +59,30 @@ def download_archive(base_url: str, archive_name: str, final_path: str) -> None:
 
 
 def main():
-    for ppa in PPA_CONFIG:
-        base_link = f"https://ppa.launchpadcontent.net/{ppa}/ubuntu/pool/main"
+    base_link = f"https://ppa.launchpadcontent.net/{PPA_TARGET['author']}/{PPA_TARGET['archive_name']}/ubuntu/pool/main"
 
-        packages = fetch_packages(base_link)
+    packages = fetch_packages(base_link)
 
-        for package in packages:
-            package_link = f"{base_link}/{package[0]}/{package}"
+    for package in packages:
+        # Sort by Last modified, in descending order
+        OPTIONS = "?C=M;O=D"
 
-            archive_name = fetch_archive_name(package_link)
-            if archive_name is None:
-                print(f"Couldn't find archive name for package {package}")
-                continue
+        base_package_link = f"{base_link}/{package[0]}/{package}"
+        options_package_link = f"{base_package_link}/{OPTIONS}"
 
-            final_path = f"{DOWNLOAD_FOLDER}/{archive_name}"
+        archive_name = fetch_archive_name(options_package_link)
+        if archive_name is None:
+            print(f"Couldn't find archive name for package {package}")
+            continue
 
-            download_archive(package_link, archive_name, final_path)
+        final_path = f"{DOWNLOAD_FOLDER}/{archive_name}"
 
-            new_final_path = final_path.replace(archive_name, f"{package}.tar.xz")
-            os.rename(final_path, new_final_path)
+        download_archive(base_package_link, archive_name, final_path)
 
-            print(f"Downloaded {new_final_path}")
+        new_final_path = final_path.replace(archive_name, f"{package}.tar.xz")
+        os.rename(final_path, new_final_path)
+
+        print(f"Downloaded {new_final_path}")
 
 
 if __name__ == "__main__":

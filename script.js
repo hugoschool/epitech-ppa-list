@@ -10,8 +10,18 @@ packages.forEach(element => {
     name.innerText = element["name"];
     name.id = element["name"];
 
-    const version = document.createElement("h4");
+    const details = document.createElement("p");
+
+    const version = document.createElement("span");
+    version.style = "font-weight: bold;";
     version.innerText = `Version: ${element["version"]}`;
+
+    const release = document.createElement("span");
+    release.innerText = `Release: ${element["release"]}`;
+
+    details.append(version);
+    details.append(document.createElement("br"));
+    details.append(release);
 
     const packages_list = document.createElement("ul");
     element["packages"].forEach(dep => {
@@ -21,7 +31,7 @@ packages.forEach(element => {
     });
 
     div.append(name);
-    div.append(version);
+    div.append(details);
     div.append(packages_list);
     root.append(div);
 });
