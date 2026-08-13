@@ -59,24 +59,25 @@ def get_package_release_codename(package_name: str, version: str) -> str | None:
         "order_by": "published_date_desc",
     }
 
-    res = requests.get(
-        f"https://api.launchpad.net/devel/~{PPA_TARGET['author']}/+archive/ubuntu/{PPA_TARGET['archive_name']}",
-        params=params,
-        timeout=10,
-    )
-
-    if not res.ok:
-        return None
-
-    res = res.json()
-
-    if res["total_size"] < 1:
-        return None
-
     try:
+        res = requests.get(
+            f"https://api.launchpad.net/devel/~{PPA_TARGET['author']}/+archive/ubuntu/{PPA_TARGET['archive_name']}",
+            params=params,
+            timeout=10,
+        )
+
+        if not res.ok:
+            return None
+
+        res = res.json()
+
+        if res["total_size"] < 1:
+            return None
+
         return res["entries"][0]["display_name"].split(" in ")[1]
     except Exception as e:
         print(f"An error occured: {e}")
+        return None
 
 
 def main():
